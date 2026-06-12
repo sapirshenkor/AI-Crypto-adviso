@@ -1,0 +1,73 @@
+# Project Rules - AI Crypto Advisor
+
+## Project Goal
+Build a clean MVP for an AI Crypto Advisor dashboard.
+
+The app includes:
+- Login / signup
+- Onboarding preferences
+- Personalized dashboard
+- Coin prices
+- Crypto news
+- AI insight of the day
+- Fun crypto meme
+- Feedback voting
+
+## Tech Stack
+- Frontend: React + Vite + TypeScript
+- Backend: FastAPI + Python
+- Database: PostgreSQL
+- Auth: JWT
+- Prices API: CoinGecko
+- News API: NewsData.io
+- AI Provider: OpenRouter
+- AI Model: openai/gpt-oss-120b:free
+- Memes: static JSON fallback
+
+## Main Rules
+- Work in small safe phases.
+- Do not rewrite large parts unless required.
+- Do not break existing behavior.
+- Prefer readable code over clever code.
+- Keep the project MVP-focused.
+- Do not over-engineer.
+- Do not add Docker until MVP is working.
+- Do not add Redis, Celery, Kubernetes, or complex ML.
+- Never expose API keys in frontend code.
+- Use environment variables for secrets.
+- Update `.env.example` when adding env variables.
+
+## Architecture Rules
+- Frontend calls only the backend.
+- Backend owns all external API integrations.
+- Routes should be thin.
+- Business logic should live in services.
+- Keep schemas/models/services separated.
+- AI is used only for Daily Insight generation.
+- Dashboard content selection is rule-based.
+- Feedback is stored for future personalization and model improvement.
+
+## Personalization Rules
+- Onboarding preferences define initial interests.
+- Assets map to:
+  - CoinGecko IDs for prices
+  - NewsData search terms for news
+  - tags for feedback/ranking
+- Feedback should be stored with item type, item id, tags, and vote.
+- Feedback may later update interest scores.
+- Do not implement real ML training in the MVP.
+
+## Development Phases
+1. Create project structure
+2. Implement DB models and migrations
+3. Implement backend auth
+4. Implement onboarding preferences
+5. Implement dashboard endpoint with static data
+6. Build frontend pages
+7. Connect frontend to backend
+8. Add external APIs
+9. Add OpenRouter AI insight
+10. Add feedback voting
+11. Polish UI
+12. Deploy
+13. Final README
