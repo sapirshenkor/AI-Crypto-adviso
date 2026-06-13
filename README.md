@@ -7,7 +7,7 @@ A personalized crypto investor dashboard.
 - **Frontend:** React + Vite + TypeScript
 - **Backend:** FastAPI
 - **Database:** PostgreSQL
-- **Auth:** JWT (planned)
+- **Auth:** JWT
 - **AI:** OpenRouter — used only for "AI Insight of the Day"
 - **Prices:** CoinGecko (planned)
 - **News:** NewsData.io with static fallback (planned)
@@ -72,10 +72,13 @@ On Windows (PowerShell):
 Copy-Item .env.example .env
 ```
 
-Example `DATABASE_URL` in `project/.env`:
+Example variables in `project/.env`:
 
 ```env
 DATABASE_URL=postgresql+psycopg://postgres:postgres@localhost:5432/ai_crypto_advisor
+JWT_SECRET_KEY=change-this-secret-in-development
+JWT_ALGORITHM=HS256
+JWT_ACCESS_TOKEN_EXPIRE_MINUTES=60
 ```
 
 3. Run migrations:
@@ -122,11 +125,48 @@ Expected response:
 
 Interactive API docs: `http://localhost:8000/docs`
 
+### Authentication
+
+Auth endpoints:
+
+| Method | Path | Description |
+|--------|------|-------------|
+| POST | `/api/auth/signup` | Register (name, email, password) |
+| POST | `/api/auth/login` | Log in and receive a JWT |
+| GET | `/api/auth/me` | Current user (Bearer token required) |
+
+Manual test with curl:
+
+```bash
+# Signup
+curl -X POST http://localhost:8000/api/auth/signup \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Test User","email":"test@example.com","password":"secret123"}'
+
+# Login
+curl -X POST http://localhost:8000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@example.com","password":"secret123"}'
+
+# Me (replace TOKEN with access_token from login)
+curl http://localhost:8000/api/auth/me \
+  -H "Authorization: Bearer TOKEN"
+```
+
+#### Testing auth in Swagger UI
+
+1. Open `http://localhost:8000/docs`.
+2. Expand **Auth** → **POST /api/auth/signup** or **POST /api/auth/login**.
+3. Use **Try it out** with JSON body (`email`, `password`; signup also needs `name`).
+4. Copy `access_token` from the login response.
+5. Click **Authorize** (top right), paste the token (Swagger adds the `Bearer` prefix), then **Authorize**.
+6. Call **GET /api/auth/me** — it should return the current user without `password_hash`.
+
 ## Development Phases
 
 1. ✅ Project structure
 2. ✅ DB models and migrations
-3. Backend auth
+3. ✅ Backend auth
 4. Onboarding preferences
 5. Dashboard endpoint (static data)
 6. Frontend pages
