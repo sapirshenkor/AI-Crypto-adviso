@@ -10,11 +10,13 @@ export function MemeCard({ meme }: MemeCardProps) {
     <Card title="Crypto Meme" subtitle="A lighter moment from the crypto world">
       <div className="meme-card">
         <h3 className="meme-card__title">{meme.title}</h3>
-        <img
-          className="meme-card__image"
-          src={meme.image_url}
-          alt={meme.title}
-        />
+        <div className="meme-card__image-wrap">
+          <img
+            className="meme-card__image"
+            src={meme.image_url}
+            alt={meme.title}
+          />
+        </div>
         <div className="tag-list">
           {meme.tags.map((tag) => (
             <span key={tag} className="tag">

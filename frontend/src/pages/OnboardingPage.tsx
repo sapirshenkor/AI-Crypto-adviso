@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 
 import { Button } from '../components/ui/Button'
 import { Card } from '../components/ui/Card'
 import { Loader } from '../components/ui/Loader'
-import { getErrorMessage } from '../utils/getErrorMessage'
 import { useAuth } from '../hooks/useAuth'
 import * as onboardingService from '../services/onboardingService'
 import type { OnboardingOptions } from '../types/onboarding'
+import { getErrorMessage } from '../utils/getErrorMessage'
+import { isOnboardingEditMode } from '../utils/onboardingEditMode'
 
 function toggleSelection(current: string[], value: string): string[] {
   return current.includes(value)
@@ -17,7 +18,9 @@ function toggleSelection(current: string[], value: string): string[] {
 
 export function OnboardingPage() {
   const navigate = useNavigate()
+  const location = useLocation()
   const { setOnboardingCompleted } = useAuth()
+  const isEditMode = isOnboardingEditMode(location.search, location.state)
   const [options, setOptions] = useState<OnboardingOptions | null>(null)
   const [selectedAssets, setSelectedAssets] = useState<string[]>([])
   const [selectedInvestorType, setSelectedInvestorType] = useState('')
@@ -28,10 +31,19 @@ export function OnboardingPage() {
   const [validationError, setValidationError] = useState('')
 
   useEffect(() => {
-    const loadOptions = async () => {
+    const loadOnboarding = async () => {
       try {
-        const data = await onboardingService.getOptions()
-        setOptions(data)
+        const [optionsData, preferences] = await Promise.all([
+          onboardingService.getOptions(),
+          onboardingService.getPreferences(),
+        ])
+        setOptions(optionsData)
+
+        if (preferences.onboarding_completed) {
+          setSelectedAssets(preferences.assets)
+          setSelectedInvestorType(preferences.investor_type ?? '')
+          setSelectedContentTypes(preferences.content_types)
+        }
       } catch (loadError: unknown) {
         setError(
           getErrorMessage(loadError, 'Could not load onboarding options.'),
@@ -41,7 +53,7 @@ export function OnboardingPage() {
       }
     }
 
-    void loadOptions()
+    void loadOnboarding()
   }, [])
 
   const handleSubmit = async () => {
@@ -69,7 +81,10 @@ export function OnboardingPage() {
         content_types: selectedContentTypes,
       })
       setOnboardingCompleted(saved.onboarding_completed)
-      navigate('/dashboard', { replace: true })
+      navigate('/dashboard', {
+        replace: true,
+        state: { refreshDashboard: true },
+      })
     } catch (submitError: unknown) {
       setError(
         getErrorMessage(submitError, 'Could not save preferences. Please try again.'),
@@ -80,7 +95,15 @@ export function OnboardingPage() {
   }
 
   if (loading) {
-    return <Loader message="Loading onboarding options..." />
+    return (
+      <Loader
+        message={
+          isEditMode
+            ? 'Loading your preferences...'
+            : 'Loading onboarding options...'
+        }
+      />
+    )
   }
 
   if (error && !options) {
@@ -103,9 +126,13 @@ export function OnboardingPage() {
     <div className="page-shell">
       <div className="page-shell__content onboarding-page">
         <header className="onboarding-page__header">
-          <h1 className="page-title">Set your preferences</h1>
+          <h1 className="page-title">
+            {isEditMode ? 'Edit your preferences' : 'Set your preferences'}
+          </h1>
           <p className="page-subtitle">
-            Tell us what you care about so we can personalize your dashboard.
+            {isEditMode
+              ? 'Update your interests to refresh your personalized dashboard.'
+              : 'Tell us what you care about so we can personalize your dashboard.'}
           </p>
         </header>
 
@@ -175,7 +202,11 @@ export function OnboardingPage() {
         )}
 
         <Button onClick={handleSubmit} disabled={submitting} fullWidth>
-          {submitting ? 'Saving preferences...' : 'Continue to dashboard'}
+          {submitting
+            ? 'Saving preferences...'
+            : isEditMode
+              ? 'Save preferences'
+              : 'Continue to dashboard'}
         </Button>
       </div>
     </div>

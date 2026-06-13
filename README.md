@@ -233,7 +233,37 @@ Dashboard endpoint (Bearer token required):
 
 | Method | Path | Description |
 |--------|------|-------------|
-| GET | `/api/dashboard` | Personalized static dashboard (news, prices, AI insight, meme) |
+| GET | `/api/dashboard` | Personalized dashboard (news, prices, AI insight, meme) |
+
+The dashboard contract is stable for the frontend. Provider sources:
+
+| Section | Provider | Fallback |
+|---------|----------|----------|
+| `news` | NewsData.io | Static news |
+| `prices` | CoinGecko | Static prices |
+| `ai_insight` | OpenRouter (primary → fallback model) | Static insight |
+| `meme` | Local files in `backend/static/memes/` | Static meme |
+
+Meme images are served from `GET /static/memes/{filename}`.
+
+### External API Environment Variables
+
+Add these to the project root `.env` (see `.env.example`):
+
+```env
+NEWS_DATA_API_KEY=
+COINGECKO_DEMO_API_KEY=
+OPENROUTER_API_KEY=
+OPENROUTER_MODEL=openai/gpt-oss-120b:free
+OPENROUTER_FALLBACK_MODEL=google/gemma-4-26b-a4b-it:free
+COINGECKO_API_BASE_URL=https://api.coingecko.com/api/v3
+NEWS_DATA_API_BASE_URL=https://newsdata.io/api/1
+OPENROUTER_API_BASE_URL=https://openrouter.ai/api/v1
+BACKEND_PUBLIC_URL=http://localhost:8000
+EXTERNAL_API_TIMEOUT_SECONDS=8
+```
+
+If a provider fails or returns invalid/empty data, the dashboard falls back to static content while preserving the same response shape.
 
 Manual test with curl:
 
@@ -259,10 +289,8 @@ curl http://localhost:8000/api/dashboard \
 4. ✅ Onboarding preferences
 5. ✅ Dashboard endpoint (static data)
 6. ✅ Frontend pages
-7. Connect frontend to backend
-8. External APIs
-9. OpenRouter AI insight
-10. Feedback voting
-11. Polish UI
-12. Deploy
-13. Final README
+7. ✅ External API integration (dashboard providers)
+8. Feedback voting
+9. Polish UI
+10. Deploy
+11. Final README

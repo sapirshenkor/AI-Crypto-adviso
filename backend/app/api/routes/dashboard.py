@@ -15,9 +15,9 @@ router = APIRouter(prefix="/dashboard", tags=["Dashboard"])
     response_model=DashboardResponse,
     summary="Get personalized dashboard",
     description=(
-        "Returns a static placeholder dashboard personalized from the authenticated "
-        "user's onboarding preferences. Requires a valid Bearer JWT. Users without "
-        "completed onboarding receive a safe default dashboard."
+        "Returns a personalized dashboard from external providers with static fallbacks. "
+        "Requires a valid Bearer JWT. Users without completed onboarding receive "
+        "a safe default dashboard."
     ),
 )
 def read_dashboard(

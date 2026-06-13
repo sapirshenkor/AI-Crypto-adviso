@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 
 import { InsightCard } from '../components/dashboard/InsightCard'
 import { MemeCard } from '../components/dashboard/MemeCard'
@@ -6,12 +7,14 @@ import { NewsCard } from '../components/dashboard/NewsCard'
 import { PriceCard } from '../components/dashboard/PriceCard'
 import { Button } from '../components/ui/Button'
 import { Loader } from '../components/ui/Loader'
-import { getErrorMessage } from '../utils/getErrorMessage'
 import { useAuth } from '../hooks/useAuth'
 import * as dashboardService from '../services/dashboardService'
 import type { DashboardResponse } from '../types/dashboard'
+import { getErrorMessage } from '../utils/getErrorMessage'
 
 export function DashboardPage() {
+  const navigate = useNavigate()
+  const location = useLocation()
   const { user, logout } = useAuth()
   const [dashboard, setDashboard] = useState<DashboardResponse | null>(null)
   const [loading, setLoading] = useState(true)
@@ -34,9 +37,13 @@ export function DashboardPage() {
   }
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- initial dashboard fetch
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- refetch on dashboard navigation
     void loadDashboard()
-  }, [])
+  }, [location.key])
+
+  const handleEditPreferences = () => {
+    navigate('/onboarding?mode=edit', { state: { editPreferences: true } })
+  }
 
   return (
     <div className="page-shell">
@@ -49,9 +56,21 @@ export function DashboardPage() {
               <p className="page-subtitle">Welcome back, {user.name}</p>
             )}
           </div>
-          <Button variant="secondary" onClick={logout}>
-            Log out
-          </Button>
+          <div className="dashboard-header__actions">
+            <Button variant="secondary" onClick={handleEditPreferences}>
+              Edit preferences
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={() => void loadDashboard()}
+              disabled={loading}
+            >
+              Refresh dashboard
+            </Button>
+            <Button variant="secondary" onClick={logout}>
+              Log out
+            </Button>
+          </div>
         </header>
 
         {loading && <Loader message="Loading your dashboard..." />}
