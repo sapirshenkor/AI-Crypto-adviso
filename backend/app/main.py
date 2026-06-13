@@ -6,6 +6,17 @@ from app.core.config import BACKEND_DIR, settings
 
 app = FastAPI(title=settings.app_name)
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5173",
+        "https://ai-crypto-advisor-eta.vercel.app",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 static_dir = BACKEND_DIR / "static"
 app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
