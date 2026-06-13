@@ -103,10 +103,37 @@ The health endpoint does not require PostgreSQL to be running.
 ```bash
 cd frontend
 npm install
+cp .env.example .env
 npm run dev
 ```
 
+On Windows (PowerShell):
+
+```powershell
+Copy-Item .env.example .env
+```
+
 App runs at `http://localhost:5173`.
+
+The Vite dev server proxies `/api` to `http://127.0.0.1:8000`, so start the backend first.
+
+#### Frontend routes
+
+| Route | Page | Access |
+|-------|------|--------|
+| `/login` | Login | Public |
+| `/signup` | Signup | Public |
+| `/onboarding` | Onboarding questionnaire | Authenticated, onboarding incomplete |
+| `/dashboard` | Personalized dashboard | Authenticated, onboarding complete |
+
+#### Manual frontend test flow
+
+1. Start backend (`uvicorn app.main:app --reload`) and frontend (`npm run dev`).
+2. Open `http://localhost:5173` — you should land on login.
+3. Sign up or log in — JWT is stored in `localStorage`.
+4. Complete onboarding — options load from the backend API.
+5. Dashboard shows news, prices, AI insight, and meme sections.
+6. Refresh the page — session should persist and route correctly.
 
 ### Health Check
 
@@ -231,7 +258,7 @@ curl http://localhost:8000/api/dashboard \
 3. ✅ Backend auth
 4. ✅ Onboarding preferences
 5. ✅ Dashboard endpoint (static data)
-6. Frontend pages
+6. ✅ Frontend pages
 7. Connect frontend to backend
 8. External APIs
 9. OpenRouter AI insight
