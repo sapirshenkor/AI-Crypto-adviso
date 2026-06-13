@@ -8,9 +8,9 @@ A personalized crypto investor dashboard.
 - **Backend:** FastAPI
 - **Database:** PostgreSQL
 - **Auth:** JWT
-- **AI:** OpenRouter — used only for "AI Insight of the Day"
-- **Prices:** CoinGecko (planned)
-- **News:** NewsData.io with static fallback (planned)
+- **AI:** OpenRouter (primary model + fallback model) — used only for "AI Insight of the Day"
+- **Prices:** CoinGecko with static fallback
+- **News:** NewsData.io with static fallback
 
 ## Architecture
 
@@ -133,7 +133,10 @@ The Vite dev server proxies `/api` to `http://127.0.0.1:8000`, so start the back
 3. Sign up or log in — JWT is stored in `localStorage`.
 4. Complete onboarding — options load from the backend API.
 5. Dashboard shows news, prices, AI insight, and meme sections.
-6. Refresh the page — session should persist and route correctly.
+6. Click **Edit preferences** — update onboarding choices and save.
+7. Click **Refresh dashboard** — content reloads from the backend.
+8. Vote on news articles, the AI insight, and the meme (👍 / 👎). Price cards do not have voting.
+9. Refresh the page — session should persist, routing should remain correct, and previous votes should stay highlighted.
 
 ### Health Check
 
@@ -281,6 +284,86 @@ curl http://localhost:8000/api/dashboard \
 4. Before onboarding, the response uses a safe default (Bitcoin + Ethereum content).
 5. Save preferences via **PUT /api/onboarding/preferences**, then call the dashboard again to see asset/content-based changes.
 
+### Feedback
+
+Feedback endpoints (Bearer token required):
+
+| Method | Path | Description |
+|--------|------|-------------|
+| POST | `/api/feedback` | Submit or update a vote on dashboard content |
+| GET | `/api/feedback/my-votes` | List the current user's saved votes |
+
+Valid `item_type` values:
+
+- `news`
+- `ai_insight`
+- `meme`
+
+Valid `vote` values:
+
+- `1` = like
+- `-1` = dislike
+
+Coin prices are intentionally **not** votable.
+
+Submitting a vote for the same `(user_id, item_id, item_type)` updates the existing row (UPSERT). Feedback uniqueness is enforced logically in the service layer by `(user_id, item_id, item_type)`. No DB unique index was added in this phase.
+
+Example request:
+
+```json
+{
+  "item_id": "news_bitcoin_1",
+  "item_type": "news",
+  "tags": ["bitcoin", "market_news"],
+  "vote": 1
+}
+```
+
+Manual test with curl:
+
+```bash
+# Submit or update a vote (replace TOKEN with access_token from login)
+curl -X POST http://localhost:8000/api/feedback \
+  -H "Authorization: Bearer TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"item_id":"news_bitcoin_1","item_type":"news","tags":["bitcoin"],"vote":1}'
+
+# Get current user's votes
+curl http://localhost:8000/api/feedback/my-votes \
+  -H "Authorization: Bearer TOKEN"
+```
+
+#### Testing feedback in Swagger UI
+
+1. Log in via **Auth** → **POST /api/auth/login** and copy `access_token`.
+2. Click **Authorize**, paste the token, then **Authorize**.
+3. Expand **Feedback** → **POST /api/feedback** → submit a vote for a dashboard item.
+4. Call **GET /api/feedback/my-votes** to confirm the saved vote.
+5. Submit the same item again with the opposite vote — the existing row should update, not duplicate.
+
+## Deployment Notes
+
+Target hosting:
+
+- **Frontend:** Vercel
+- **Backend:** Render
+- **Database:** Neon PostgreSQL
+
+Backend start command on Render:
+
+```bash
+alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port $PORT
+```
+
+Production checklist:
+
+- Set `DATABASE_URL` to the Neon connection string (use the `postgresql+psycopg://` driver format; add `?sslmode=require` if Neon requires SSL).
+- Set a strong `JWT_SECRET_KEY`.
+- Configure **CORS** on the backend for the deployed Vercel frontend URL.
+- Set `VITE_API_URL` on Vercel to the deployed backend URL (for example `https://your-api.onrender.com`).
+- Set `BACKEND_PUBLIC_URL` on Render to the same deployed backend URL so meme image URLs resolve correctly.
+- Add external API keys (`NEWS_DATA_API_KEY`, `COINGECKO_DEMO_API_KEY`, `OPENROUTER_API_KEY`) in the Render environment.
+
 ## Development Phases
 
 1. ✅ Project structure
@@ -290,7 +373,7 @@ curl http://localhost:8000/api/dashboard \
 5. ✅ Dashboard endpoint (static data)
 6. ✅ Frontend pages
 7. ✅ External API integration (dashboard providers)
-8. Feedback voting
-9. Polish UI
+8. ✅ Feedback voting
+9. ✅ Polish UI
 10. Deploy
 11. Final README

@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
-from app.api.routes import auth, dashboard, health, onboarding
+from app.api.routes import auth, dashboard, feedback, health, onboarding
 from app.core.config import BACKEND_DIR, settings
 
 app = FastAPI(title=settings.app_name)
@@ -13,3 +13,4 @@ app.include_router(health.router, prefix=settings.api_prefix)
 app.include_router(auth.router, prefix=settings.api_prefix)
 app.include_router(onboarding.router, prefix=settings.api_prefix)
 app.include_router(dashboard.router, prefix=settings.api_prefix)
+app.include_router(feedback.router, prefix=settings.api_prefix)

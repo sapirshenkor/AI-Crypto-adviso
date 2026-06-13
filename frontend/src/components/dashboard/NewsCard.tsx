@@ -1,12 +1,27 @@
 import { Card } from '../ui/Card'
 import { EmptyState } from '../ui/EmptyState'
+import type { FeedbackItemType, FeedbackVoteValue } from '../../types/feedback'
 import type { NewsItem } from '../../types/dashboard'
+import { VoteButtons } from './VoteButtons'
 
 interface NewsCardProps {
   items: NewsItem[]
+  getVote: (itemType: FeedbackItemType, itemId: string) => FeedbackVoteValue | null
+  onVote: (
+    itemType: FeedbackItemType,
+    itemId: string,
+    tags: string[],
+    vote: FeedbackVoteValue,
+  ) => void
+  votingDisabled?: boolean
 }
 
-export function NewsCard({ items }: NewsCardProps) {
+export function NewsCard({
+  items,
+  getVote,
+  onVote,
+  votingDisabled = false,
+}: NewsCardProps) {
   return (
     <Card
       title="Market News"
@@ -30,6 +45,13 @@ export function NewsCard({ items }: NewsCardProps) {
                   ))}
                 </span>
               </div>
+              <VoteButtons
+                itemId={item.id}
+                itemType="news"
+                currentVote={getVote('news', item.id)}
+                onVote={(vote) => onVote('news', item.id, item.tags, vote)}
+                disabled={votingDisabled}
+              />
             </li>
           ))}
         </ul>

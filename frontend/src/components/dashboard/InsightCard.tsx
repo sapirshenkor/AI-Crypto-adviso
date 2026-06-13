@@ -1,11 +1,26 @@
 import { Card } from '../ui/Card'
+import type { FeedbackItemType, FeedbackVoteValue } from '../../types/feedback'
 import type { AIInsightItem } from '../../types/dashboard'
+import { VoteButtons } from './VoteButtons'
 
 interface InsightCardProps {
   insight: AIInsightItem
+  getVote: (itemType: FeedbackItemType, itemId: string) => FeedbackVoteValue | null
+  onVote: (
+    itemType: FeedbackItemType,
+    itemId: string,
+    tags: string[],
+    vote: FeedbackVoteValue,
+  ) => void
+  votingDisabled?: boolean
 }
 
-export function InsightCard({ insight }: InsightCardProps) {
+export function InsightCard({
+  insight,
+  getVote,
+  onVote,
+  votingDisabled = false,
+}: InsightCardProps) {
   return (
     <Card
       title={insight.title}
@@ -20,6 +35,13 @@ export function InsightCard({ insight }: InsightCardProps) {
           </span>
         ))}
       </div>
+      <VoteButtons
+        itemId={insight.id}
+        itemType="ai_insight"
+        currentVote={getVote('ai_insight', insight.id)}
+        onVote={(vote) => onVote('ai_insight', insight.id, insight.tags, vote)}
+        disabled={votingDisabled}
+      />
     </Card>
   )
 }
