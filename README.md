@@ -200,13 +200,37 @@ curl -X PUT http://localhost:8000/api/onboarding/preferences \
    - **PUT /api/onboarding/preferences** — valid JSON body with at least one asset and content type
 4. Call **GET /api/onboarding/preferences** again to confirm saved values.
 
+### Dashboard
+
+Dashboard endpoint (Bearer token required):
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/dashboard` | Personalized static dashboard (news, prices, AI insight, meme) |
+
+Manual test with curl:
+
+```bash
+# Dashboard (replace TOKEN with access_token from login)
+curl http://localhost:8000/api/dashboard \
+  -H "Authorization: Bearer TOKEN"
+```
+
+#### Testing dashboard in Swagger UI
+
+1. Log in via **Auth** → **POST /api/auth/login** and copy `access_token`.
+2. Click **Authorize**, paste the token, then **Authorize**.
+3. Expand **Dashboard** → **GET /api/dashboard** → **Try it out**.
+4. Before onboarding, the response uses a safe default (Bitcoin + Ethereum content).
+5. Save preferences via **PUT /api/onboarding/preferences**, then call the dashboard again to see asset/content-based changes.
+
 ## Development Phases
 
 1. ✅ Project structure
 2. ✅ DB models and migrations
 3. ✅ Backend auth
 4. ✅ Onboarding preferences
-5. Dashboard endpoint (static data)
+5. ✅ Dashboard endpoint (static data)
 6. Frontend pages
 7. Connect frontend to backend
 8. External APIs
