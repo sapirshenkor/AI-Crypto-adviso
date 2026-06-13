@@ -13,7 +13,9 @@ export function SignupPage() {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
   const [error, setError] = useState('')
+  const [validationError, setValidationError] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
   if (isLoading) {
@@ -29,6 +31,13 @@ export function SignupPage() {
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     setError('')
+    setValidationError('')
+
+    if (password !== confirmPassword) {
+      setValidationError('Passwords do not match.')
+      return
+    }
+
     setSubmitting(true)
 
     try {
@@ -76,11 +85,28 @@ export function SignupPage() {
             label="Password"
             type="password"
             value={password}
-            onChange={(event) => setPassword(event.target.value)}
+            onChange={(event) => {
+              setPassword(event.target.value)
+              setValidationError('')
+            }}
             placeholder="At least 8 characters"
             required
             minLength={8}
             autoComplete="new-password"
+          />
+          <Input
+            label="Confirm Password"
+            type="password"
+            value={confirmPassword}
+            onChange={(event) => {
+              setConfirmPassword(event.target.value)
+              setValidationError('')
+            }}
+            placeholder="Re-enter your password"
+            required
+            minLength={8}
+            autoComplete="new-password"
+            error={validationError}
           />
 
           {error && <p className="form-error">{error}</p>}

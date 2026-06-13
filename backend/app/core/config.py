@@ -1,5 +1,6 @@
 from pathlib import Path
 
+from pydantic import computed_field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 ROOT_DIR = Path(__file__).resolve().parents[3]
@@ -29,11 +30,23 @@ class Settings(BaseSettings):
     openrouter_api_base_url: str = "https://openrouter.ai/api/v1"
     backend_public_url: str = "http://localhost:8000"
     external_api_timeout_seconds: int = 8
+    cors_allowed_origins: str = (
+        "http://localhost:5173,https://ai-crypto-advisor-eta.vercel.app"
+    )
 
     model_config = SettingsConfigDict(
         env_file=ENV_FILE,
         env_file_encoding="utf-8",
     )
+
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def cors_origins(self) -> list[str]:
+        return [
+            origin.strip()
+            for origin in self.cors_allowed_origins.split(",")
+            if origin.strip()
+        ]
 
 
 settings = Settings()

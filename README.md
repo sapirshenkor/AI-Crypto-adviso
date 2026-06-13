@@ -359,7 +359,7 @@ Production checklist:
 
 - Set `DATABASE_URL` to the Neon connection string (use the `postgresql+psycopg://` driver format; add `?sslmode=require` if Neon requires SSL).
 - Set a strong `JWT_SECRET_KEY`.
-- Configure **CORS** on the backend for the deployed Vercel frontend URL.
+- Configure **CORS** via `CORS_ALLOWED_ORIGINS` on the backend (comma-separated origins; include the deployed Vercel frontend URL).
 - Set `VITE_API_URL` on Vercel to the deployed backend URL (for example `https://your-api.onrender.com`).
 - Set `BACKEND_PUBLIC_URL` on Render to the same deployed backend URL so meme image URLs resolve correctly.
 - Add external API keys (`NEWS_DATA_API_KEY`, `COINGECKO_DEMO_API_KEY`, `OPENROUTER_API_KEY`) in the Render environment.
