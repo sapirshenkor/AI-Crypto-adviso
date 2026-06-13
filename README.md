@@ -162,12 +162,50 @@ curl http://localhost:8000/api/auth/me \
 5. Click **Authorize** (top right), paste the token (Swagger adds the `Bearer` prefix), then **Authorize**.
 6. Call **GET /api/auth/me** — it should return the current user without `password_hash`.
 
+### Onboarding
+
+Onboarding endpoints (all require Bearer token):
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/onboarding/options` | Allowed questionnaire choices |
+| GET | `/api/onboarding/preferences` | Current user's saved preferences (or empty default) |
+| PUT | `/api/onboarding/preferences` | Create or update preferences |
+
+Manual test with curl:
+
+```bash
+# Options (replace TOKEN with access_token from login)
+curl http://localhost:8000/api/onboarding/options \
+  -H "Authorization: Bearer TOKEN"
+
+# Get preferences (empty default if not yet saved)
+curl http://localhost:8000/api/onboarding/preferences \
+  -H "Authorization: Bearer TOKEN"
+
+# Save preferences
+curl -X PUT http://localhost:8000/api/onboarding/preferences \
+  -H "Authorization: Bearer TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"assets":["bitcoin","ethereum"],"investor_type":"hodler","content_types":["market_news","fun"]}'
+```
+
+#### Testing onboarding in Swagger UI
+
+1. Log in via **Auth** → **POST /api/auth/login** and copy `access_token`.
+2. Click **Authorize**, paste the token, then **Authorize**.
+3. Expand **Onboarding** and try:
+   - **GET /api/onboarding/options** — static choices
+   - **GET /api/onboarding/preferences** — default empty state before first save
+   - **PUT /api/onboarding/preferences** — valid JSON body with at least one asset and content type
+4. Call **GET /api/onboarding/preferences** again to confirm saved values.
+
 ## Development Phases
 
 1. ✅ Project structure
 2. ✅ DB models and migrations
 3. ✅ Backend auth
-4. Onboarding preferences
+4. ✅ Onboarding preferences
 5. Dashboard endpoint (static data)
 6. Frontend pages
 7. Connect frontend to backend
