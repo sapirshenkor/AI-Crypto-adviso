@@ -1,3 +1,5 @@
+import uuid
+
 from app.schemas.dashboard import AIInsightItem, MemeItem, NewsItem, PriceItem
 
 DEFAULT_ASSETS = ["bitcoin", "ethereum"]
@@ -103,12 +105,17 @@ def static_prices_for_assets(assets: list[str]) -> list[PriceItem]:
     return [PRICES_BY_ASSET[asset] for asset in assets if asset in PRICES_BY_ASSET]
 
 
+def _fallback_insight_id() -> str:
+    return f"insight_fallback_{uuid.uuid4()}"
+
+
 def static_insight(
     assets: list[str],
     investor_type: str | None,
     content_types: list[str],
     use_defaults: bool,
 ) -> AIInsightItem:
+    insight_id = _fallback_insight_id()
     asset_labels = [asset.replace("_", " ").title() for asset in assets]
     if len(asset_labels) == 1:
         asset_text = asset_labels[0]
@@ -121,7 +128,7 @@ def static_insight(
 
     if use_defaults:
         return AIInsightItem(
-            id="insight_static_1",
+            id=insight_id,
             title="AI Insight of the Day",
             content=(
                 "Welcome to your crypto dashboard. Explore general market themes "
@@ -143,7 +150,7 @@ def static_insight(
         content += " As an NFT collector, ecosystem activity may matter as much as price."
 
     return AIInsightItem(
-        id="insight_static_1",
+        id=insight_id,
         title="AI Insight of the Day",
         content=content,
         tags=tags,

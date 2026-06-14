@@ -1,8 +1,16 @@
+import logging
+import uuid
+
+from sqlalchemy.orm import Session
+
 from app.core.config import settings
 from app.data.dashboard_fallbacks import static_insight
+from app.models.ai_insight import AIInsight
 from app.schemas.dashboard import AIInsightItem, NewsItem, PriceItem
 from app.schemas.dashboard_context import DashboardContext
 from app.services.http_client import post_json
+
+logger = logging.getLogger(__name__)
 
 SYSTEM_PROMPT = """You are an AI crypto dashboard assistant.
 
@@ -108,7 +116,42 @@ def _request_insight(model: str, user_prompt: str) -> str | None:
     return _extract_content(data)
 
 
+def _insight_id_from_row(row_id: uuid.UUID) -> str:
+    return f"insight_{row_id}"
+
+
+def _unsaved_insight_id() -> str:
+    return f"insight_{uuid.uuid4()}"
+
+
+def _save_insight(
+    db: Session,
+    user_id: uuid.UUID,
+    content: str,
+    prompt: str,
+) -> uuid.UUID | None:
+    try:
+        row = AIInsight(
+            user_id=user_id,
+            content=content,
+            prompt=prompt,
+        )
+        db.add(row)
+        db.commit()
+        db.refresh(row)
+        logger.info("AI insight saved to database for user_id=%s", user_id)
+        return row.id
+    except Exception:
+        db.rollback()
+        logger.exception(
+            "Failed to save AI insight to database for user_id=%s", user_id
+        )
+        return None
+
+
 def get_insight(
+    db: Session,
+    user_id: uuid.UUID,
     context: DashboardContext,
     news: list[NewsItem],
     prices: list[PriceItem],
@@ -116,16 +159,45 @@ def get_insight(
     user_prompt = _build_user_prompt(context, news, prices)
     tags = list(dict.fromkeys(context.assets + context.content_types))
 
-    for model in (settings.openrouter_model, settings.openrouter_fallback_model):
+    if not settings.openrouter_api_key:
+        logger.info("OpenRouter API key missing; using static fallback for AI insight")
+        return static_insight(
+            assets=context.assets,
+            investor_type=context.investor_type,
+            content_types=context.content_types,
+            use_defaults=context.use_defaults,
+        )
+
+    for model_kind, model in (
+        ("primary", settings.openrouter_model),
+        ("fallback", settings.openrouter_fallback_model),
+    ):
+        logger.info(
+            "Attempting AI insight generation with %s model: %s",
+            model_kind,
+            model,
+        )
         content = _request_insight(model, user_prompt)
         if content:
+            logger.info(
+                "AI insight generated successfully with %s model: %s",
+                model_kind,
+                model,
+            )
+            saved_id = _save_insight(db, user_id, content, user_prompt)
+            insight_id = (
+                _insight_id_from_row(saved_id)
+                if saved_id is not None
+                else _unsaved_insight_id()
+            )
             return AIInsightItem(
-                id="insight_live_1",
+                id=insight_id,
                 title="AI Insight of the Day",
                 content=content,
                 tags=tags,
             )
 
+    logger.info("OpenRouter models failed; using static fallback for AI insight")
     return static_insight(
         assets=context.assets,
         investor_type=context.investor_type,

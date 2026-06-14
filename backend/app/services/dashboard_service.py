@@ -38,7 +38,9 @@ def build_dashboard(db: Session, user: User) -> DashboardResponse:
 
     prices = market_data_service.get_prices(context)
     news = news_service.get_news(context)
-    ai_insight = ai_insight_service.get_insight(context, news, prices)
+    ai_insight = ai_insight_service.get_insight(
+        db, user.id, context, news, prices
+    )
     meme = meme_service.get_meme(context)
 
     return DashboardResponse(
